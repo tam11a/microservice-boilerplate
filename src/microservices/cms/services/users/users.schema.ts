@@ -1,4 +1,4 @@
-import UserRepository from "./controllers/find_users.controller";
+import UserRepository from "./users.repositories";
 
 class UserSchema {
 	private repository: any;
