@@ -1,16 +1,21 @@
-import { findUsers } from "./controllers/find_users.controller";
+import UserRepository from "./controllers/find_users.controller";
 
 class UserSchema {
+	private repository: any;
+	constructor() {
+		this.repository = new UserRepository();
+	}
+
 	public create_account() {
 		return [];
 	}
 
 	public find_users() {
-		return [findUsers];
+		return [this.repository.find];
 	}
 
 	public delete_account() {
-		return [];
+		return [this.repository.delete];
 	}
 
 	public find_by_id() {
