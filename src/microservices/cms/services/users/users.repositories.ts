@@ -1,7 +1,11 @@
 import { Request, Response, NextFunction } from "express";
+import User from "./users.model";
 
 class UserRepository {
-	public find(_req: Request, res: Response, _next: NextFunction) {
+	constructor() {}
+
+	public async find(_req: Request, res: Response, _next: NextFunction) {
+		console.log(await User.findOne());
 		res.send("User Find API");
 	}
 

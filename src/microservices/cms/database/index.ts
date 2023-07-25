@@ -1,5 +1,6 @@
 import { Sequelize } from "sequelize-typescript";
 const db_config = require("../config").database;
+const path = require("path");
 
 class Database {
 	public sequelize: any;
@@ -12,7 +13,7 @@ class Database {
 				acquire: 30000,
 				idle: 10000,
 			},
-			models: [__dirname + "/../services/**/*.model.ts"],
+			models: [path.join(__dirname, "..", "services", "**/*.model.js")],
 			modelMatch: (filename, member) => {
 				return (
 					filename.substring(0, filename.indexOf(".model")) ===

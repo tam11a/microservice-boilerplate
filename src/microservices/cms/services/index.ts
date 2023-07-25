@@ -13,7 +13,7 @@ class Service {
 
 	public connect() {
 		router.use(this.route, this.path);
-		console.info(`[Service:${this.name}]: Connected to`);
+		console.info(`[${this.name}.Service]: Initialized`);
 	}
 }
 
