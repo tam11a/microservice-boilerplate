@@ -18,6 +18,10 @@ class Service {
 }
 
 new Service("Users", "/users", require("./users")).connect();
-// new Service("Authentication", "/auth", require("./authentication")).connect();
+new Service(
+	"UserAuthentication",
+	"/auth",
+	require("./authentication")
+).connect();
 
 module.exports = router;

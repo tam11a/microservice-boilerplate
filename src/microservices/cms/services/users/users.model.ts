@@ -8,6 +8,11 @@ import {
 	CreatedAt,
 	UpdatedAt,
 	DeletedAt,
+	AllowNull,
+	BeforeUpdate,
+	BeforeCreate,
+	IsEmail,
+	Default,
 } from "sequelize-typescript";
 
 @Table({
@@ -28,24 +33,34 @@ class User extends Model<User> {
 	@Column
 	"username": string;
 
+	@AllowNull
 	@Column
+	"password": string;
+
+	@Column(DataType.ENUM("Male", "Female", "Non Binary"))
 	"gender": string;
 
+	@AllowNull
 	@Column
 	"display_picture": string;
 
+	@AllowNull
+	@IsEmail
 	@Column
 	"email": string;
 
 	@Column
 	"phone": string;
 
+	@AllowNull
 	@Column
 	"default_address": string;
 
+	@Default(true)
 	@Column
 	"is_active": boolean;
 
+	@Default(false)
 	@Column
 	"is_verified": boolean;
 
@@ -60,6 +75,14 @@ class User extends Model<User> {
 	@DeletedAt
 	@Column({ field: "deleted_at" })
 	"deleted_at": Date;
+
+	@BeforeUpdate
+	@BeforeCreate
+	static hashPassword(_instance: User) {
+		console.log(
+			"Have to hash password if it is updated or created with password"
+		);
+	}
 }
 
 export default User;

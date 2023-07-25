@@ -16,12 +16,17 @@ class App {
 		this.npm_package_name = npm_package_name;
 		this.npm_package_version = npm_package_version;
 
-		this.initializeMiddlewares();
+		this.initializePreMiddlewares();
 		this.initializeService();
+		this.initializePostMiddlewares();
 	}
 
-	private initializeMiddlewares() {
+	private initializePreMiddlewares() {
 		//   this.app.use(bodyParser.json());
+	}
+
+	private initializePostMiddlewares() {
+		this.app.use(require("./middleware/Error"));
 	}
 
 	private initializeService() {
