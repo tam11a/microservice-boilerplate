@@ -9,9 +9,9 @@ module.exports = {
 	port: process.env.PORT || default_config.port,
 	database: {
 		dialect: "mysql",
-		host: "103.81.199.185",
-		user: "root",
-		password: "12riothomas",
-		database: "test001",
+		host: process.env.DB_HOST,
+		user: process.env.DB_USER,
+		password: process.env.DB_PASSWORD,
+		database: process.env.DB_NAME,
 	},
 };
