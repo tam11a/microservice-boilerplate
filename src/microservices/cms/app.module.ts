@@ -22,7 +22,15 @@ class App {
 	}
 
 	private initializePreMiddlewares() {
-		//   this.app.use(bodyParser.json());
+		this.app.use(express.json());
+		this.app.use(
+			require("cors")({
+				origin: "*",
+				methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+				preflightContinue: false,
+				optionsSuccessStatus: 204,
+			})
+		);
 	}
 
 	private initializePostMiddlewares() {

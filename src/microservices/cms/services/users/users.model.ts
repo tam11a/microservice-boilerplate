@@ -14,6 +14,7 @@ import {
 	IsEmail,
 	Default,
 } from "sequelize-typescript";
+const bcrypt = require("bcryptjs");
 
 @Table({
 	tableName: "user",
@@ -60,9 +61,9 @@ class User extends Model<User> {
 	@Column
 	"is_active": boolean;
 
-	@Default(false)
+	@AllowNull
 	@Column
-	"is_verified": boolean;
+	"verified_at": Date;
 
 	@CreatedAt
 	@Column({ field: "created_at" })
@@ -78,10 +79,10 @@ class User extends Model<User> {
 
 	@BeforeUpdate
 	@BeforeCreate
-	static hashPassword(_instance: User) {
-		console.log(
-			"Have to hash password if it is updated or created with password"
-		);
+	static async hashPassword(instance: User) {
+		const salt = await bcrypt.genSalt(10);
+		const hashedPassword = await bcrypt.hash(instance.password, salt);
+		instance.password = hashedPassword;
 	}
 }
 
