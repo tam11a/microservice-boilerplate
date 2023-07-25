@@ -1,9 +1,9 @@
 const user_router = require("express").Router();
-import UserSchema from "./users.schema";
+import UserRepository from "./users.repositories";
 
-const schema = new UserSchema();
+const repository = new UserRepository();
 
-user_router.get("/", schema.find_users());
-user_router.delete("/:id", schema.find_users());
+user_router.get("/", [repository.find]);
+user_router.delete("/:id", [repository.delete]);
 
 module.exports = user_router;

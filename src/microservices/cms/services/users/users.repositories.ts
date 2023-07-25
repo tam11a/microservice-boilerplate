@@ -5,8 +5,9 @@ class UserRepository {
 	constructor() {}
 
 	public async find(_req: Request, res: Response, _next: NextFunction) {
-		console.log(await User.findOne());
-		res.send("User Find API");
+		res.status(200).json({
+			...(await User.findAndCountAll({})),
+		});
 	}
 
 	public delete(req: Request, res: Response, _next: NextFunction) {
