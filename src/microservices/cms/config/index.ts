@@ -8,7 +8,10 @@ const default_config = {
 module.exports = {
 	port: process.env.PORT || default_config.port,
 	database: {
-		dialect: "sqlite",
-		storage: "../storage/database.sqlite",
+		dialect: "mysql",
+		host: "103.81.199.185",
+		user: "root",
+		password: "12riothomas",
+		database: "test001",
 	},
 };
