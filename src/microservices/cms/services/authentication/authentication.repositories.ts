@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const ErrorResponse = require("@/middleware/Error/error.response");
 const { Op } = require("sequelize");
 
-class UserRepository {
+class AuthRepository {
 	constructor() {}
 
 	public async register(req: Request, res: Response, next: NextFunction) {
@@ -125,4 +125,4 @@ class UserRepository {
 	}
 }
 
-export default UserRepository;
+export default AuthRepository;
