@@ -26,7 +26,7 @@ class Pagination {
 			this.sort = sort ? this.replaceAll(sort?.toString(), " ", "") : undefined;
 			this.limit =
 				limit && parseInt(limit?.toString()) ? parseInt(limit?.toString()) : 10;
-			this.search_string = search?.toString() || undefined;
+			this.search_string = search?.toString() || "";
 			this.page =
 				page && parseInt(page?.toString() || "0") > 1
 					? parseInt(page?.toString() || "0")
@@ -42,7 +42,7 @@ class Pagination {
 		return str.replace(new RegExp(find, "g"), replace);
 	}
 
-	public order(literal_fields: string[] = []) {
+	public order(literal_fields: string[] | undefined = []) {
 		if (!this.sort) return [];
 		literal_fields = literal_fields.concat(this.literal_fields);
 
@@ -58,6 +58,14 @@ class Pagination {
 		);
 	}
 
+	public get_attributes(literal_fields: string[] | undefined = []) {
+		return {
+			offset: this.skip,
+			limit: this.limit,
+			order: this.order(literal_fields),
+		};
+	}
+
 	public arrange(data: any) {
 		return {
 			success: true,
@@ -66,9 +74,9 @@ class Pagination {
 			total: data.count,
 			limit: this.limit,
 			page: this.page,
-			hasNextPage: Math.ceil(data.count / this.limit) - this.page > 0,
-			hasPreviousPage: this.page > 1,
-			totalPages: Math.ceil(data.count / this.limit),
+			has_next_page: Math.ceil(data.count / this.limit) - this.page > 0,
+			has_previous_page: this.page > 1,
+			total_pages: Math.ceil(data.count / this.limit),
 		};
 	}
 
@@ -76,3 +84,5 @@ class Pagination {
 		this._res.status(status).json(this.arrange(data));
 	}
 }
+
+export default Pagination;
