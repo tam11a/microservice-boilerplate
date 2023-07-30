@@ -5,6 +5,7 @@ import {
 	DataType,
 	PrimaryKey,
 	AutoIncrement,
+	Unique,
 	CreatedAt,
 	UpdatedAt,
 	DeletedAt,
@@ -31,6 +32,7 @@ class User extends Model<User> {
 	@Column
 	"last_name": string;
 
+	@Unique
 	@Column
 	"username": string;
 
@@ -45,11 +47,13 @@ class User extends Model<User> {
 	@Column
 	"display_picture": string;
 
+	@Unique
 	@AllowNull
 	@IsEmail
 	@Column
 	"email": string;
 
+	@Unique
 	@Column
 	"phone": string;
 

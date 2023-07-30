@@ -10,7 +10,6 @@ module.exports = (
 ) => {
 	let error = { ...err };
 	error.message = err.message || err?.original?.message;
-	// console.log(error.message);
 	if (err.name?.includes("Sequelize")) {
 		var message =
 			err?.errors?.[0]?.message || error?.message || "something went wrong";

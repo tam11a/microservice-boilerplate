@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const ErrorResponse = require("@/middleware/Error/error.response");
 const { Op } = require("sequelize");
 
-class UserRepository {
+class AuthRepository {
 	constructor() {}
 
 	public async register(req: Request, res: Response, next: NextFunction) {
@@ -107,6 +107,9 @@ class UserRepository {
 						[Op.ne]: null,
 					},
 				},
+				attributes: {
+					exclude: ["password"],
+				},
 			});
 
 			if (!user) return next(new ErrorResponse("No user found!", 404));
@@ -114,22 +117,7 @@ class UserRepository {
 			res.status(200).json({
 				success: true,
 				message: "User is authenticated.",
-				data: {
-					id: user.id,
-					first_name: user.first_name,
-					last_name: user.last_name,
-					username: user.username,
-					gender: user.gender,
-					display_picture: user.display_picture,
-					email: user.email,
-					phone: user.phone,
-					default_address: user.default_address,
-					is_active: user.is_active,
-					verified_at: user.verified_at,
-					created_at: user.created_at,
-					updated_at: user.updated_at,
-					deleted_at: user.deleted_at,
-				},
+				data: user.dataValues,
 			});
 		} catch (error) {
 			next(error);
@@ -137,21 +125,4 @@ class UserRepository {
 	}
 }
 
-/*
-"id": 7,
-        "first_name": "Ibrahim Sadik",
-        "last_name": "Tamim",
-        "username": "tam11a",
-        "password": "$2a$10$vcP.DbbKKV/Ca2qNd.Jcg.QPVvj.aKQamZm1lN3O06PiqIozeF5Bq",
-        "gender": "Male",
-        "display_picture": null,
-        "email": "ibrahimsadiktamim@gmail.com",
-        "phone": "01768161994",
-        "default_address": null,
-        "is_active": true,
-        "is_verified": false,
-        "created_at": "2023-07-25T18:04:55.000Z",
-        "updated_at": "2023-07-25T18:04:55.000Z",
-        "deleted_at": null
-*/
-export default UserRepository;
+export default AuthRepository;
