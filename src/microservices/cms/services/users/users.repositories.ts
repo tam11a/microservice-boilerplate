@@ -6,7 +6,11 @@ class UserRepository {
 
 	public async find(_req: Request, res: Response, _next: NextFunction) {
 		res.status(200).json({
-			...(await User.findAndCountAll({})),
+			...(await User.findAndCountAll({
+				attributes: {
+					exclude: ["password"],
+				},
+			})),
 		});
 	}
 
