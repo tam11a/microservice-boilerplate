@@ -42,7 +42,7 @@ class AuthRepository {
 			const { phone, password } = req.body;
 			if (!phone || !password)
 				return next(
-					new ErrorResponse("Please provide email and password", 400)
+					new ErrorResponse("Please provide phone number and password", 400)
 				);
 
 			const data = await User.findAll({
