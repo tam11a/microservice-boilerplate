@@ -30,18 +30,13 @@ class EmployeeRepository {
             "salary",
             "bank",
             "default_address",
-            "is_active",
-            "verified_at",
-            "created_at",
-            "updated_at",
-            "deleted_at",
           ],
         }
       );
 
       res.status(201).json({
         success: true,
-        message: "Employee created successfully",
+        message: `${req.body.first_name} registered as an employee successfully`,
       });
     } catch (error) {
       next(error);
