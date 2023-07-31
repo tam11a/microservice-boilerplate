@@ -83,17 +83,17 @@ class EmployeeRepository {
   }
 
   public async findById(req: Request, res: Response, next: NextFunction) {
-    try {
+    try {      
       var employee = await Employee.findByPk(req.params.id, {
         attributes: {
           exclude: ["password"],
         },
       });
-
+      
       if (!employee)
-        return next(new ErrorResponse("No employee found!", 404));
-
-      res.status(201).json({
+        return next(new ErrorResponse("No employee found!", 404)); 
+      
+      res.status(200).json({
         success: true,
         message: "Information fetched successfully",
         data: employee,
@@ -115,7 +115,6 @@ class EmployeeRepository {
             gender,
             display_picture,
             email,
-            phone,
             dob,
             hired_date,
             role,
@@ -136,7 +135,6 @@ class EmployeeRepository {
         gender,
         display_picture,
         email,
-        phone,
         dob,
         hired_date,
         role,
@@ -146,7 +144,7 @@ class EmployeeRepository {
         default_address,
       });
 
-      res.status(200).json({
+      res.status(204).json({
         success: true,
         message: "Information updated successfully",
       });
