@@ -83,10 +83,8 @@ class EmployeeRepository {
   }
 
   public async findById(req: Request, res: Response, next: NextFunction) {
-    try {
-      
+    try {      
       var employee = await Employee.findByPk(req.params.id, {
-        
         attributes: {
           exclude: ["password"],
         },
@@ -108,7 +106,8 @@ class EmployeeRepository {
   public async update(req: Request, res: Response, next: NextFunction) {
     try {
       if (!req.params.id)
-      return next(new ErrorResponse("Invalid Request!", 400));
+        return next(new ErrorResponse("Invalid Request!", 400));
+      
       const {
             first_name,
             last_name,
