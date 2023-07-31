@@ -23,7 +23,7 @@ new Service(
   require("./authentication")
 ).connect();
 new Service("Employee", "/employee", require("./employee")).connect();
-// new Service("Permission", "/permission", require("./permission")).connect();
+new Service("Permission", "/permission", require("./permission")).connect();
 new Service("Role", "/role", require("./role")).connect();
 new Service("Accesspoint", "/accesspoint", require("./accesspoint")).connect();
 

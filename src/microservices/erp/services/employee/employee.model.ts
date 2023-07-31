@@ -13,7 +13,10 @@ import {
 	BeforeCreate,
 	IsEmail,
 	Default,
+  ForeignKey,
+  BelongsTo,
 } from "sequelize-typescript";
+import Role from "../role/role.model";
 const bcrypt = require("bcryptjs");
 
 @Table({
@@ -60,9 +63,6 @@ class Employee extends Model<Employee> {
   "hired_date": string;
 
   @Column
-  "role": string;
-
-  @Column
   "work_hour": string;
 
   @Column
@@ -95,6 +95,16 @@ class Employee extends Model<Employee> {
   @Column({ field: "deleted_at" })
   "deleted_at": Date;
 
+  // Relations
+  @ForeignKey(() => Role)
+  @AllowNull
+  @Column(DataType.BIGINT)
+  "role_id": number;
+
+  @BelongsTo(() => Role)
+  "role": Role;
+
+  //hooks
   @BeforeUpdate
   @BeforeCreate
   static async hashPassword(instance: Employee) {

@@ -8,7 +8,9 @@ import {
   CreatedAt,
   UpdatedAt,
   DeletedAt,
+  HasMany,
 } from "sequelize-typescript";
+import Permission from "../permission/permission.model";
 
 @Table({
   tableName: "accesspoint",
@@ -33,6 +35,10 @@ class AccessPoint extends Model<AccessPoint> {
   @DeletedAt
   @Column({ field: "deleted_at" })
   "deleted_at": Date;
+
+  // Relations
+  @HasMany(() => Permission)
+  "assigned_permissions": Permission[];
 }
 
 export default AccessPoint;
