@@ -10,7 +10,10 @@ import {
   DeletedAt,
   AllowNull,
   Default,
+  HasMany,
 } from "sequelize-typescript";
+import Employee from "../employee/employee.model";
+import Permission from "../permission/permission.model";
 
 @Table({
   tableName: "role",
@@ -44,6 +47,12 @@ class Role extends Model<Role> {
   @Column({ field: "deleted_at" })
   "deleted_at": Date;
 
+  // Relations
+  @HasMany(() => Employee)
+  "assigned_employees": Employee[];
+
+  @HasMany(() => Permission)
+  "assigned_permissions": Permission[];
 }
 
 export default Role;
