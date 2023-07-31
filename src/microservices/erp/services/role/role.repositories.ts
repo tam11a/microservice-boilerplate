@@ -89,8 +89,34 @@ class RoleRepository {
     }
   }
 
-  public delete(req: Request, res: Response, _next: NextFunction) {
-    res.send(`Role ${req.params.id} Delete API`);
+  public async delete(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.params.id)
+        return next(new ErrorResponse("Invalid Request!", 400));
+
+      var role = await Role.findByPk(req.params.id, {
+        include: ["assigned_employees", "assigned_permissions"],
+      });
+
+      if (!role) return next(new ErrorResponse("No role found!", 404));
+
+      // Delete all associated employees and permissions
+      await role.$get("assigned_employees");
+      await role.$remove("assigned_employees", role.assigned_employees);
+
+    //   await role.$get("assigned_permissions");
+    //   await role.$remove("assigned_permissions", role.assigned_permissions);
+
+      // Delete the role
+      await role.destroy();
+
+      res.status(200).json({
+        success: true,
+        message: "Deleted successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
   }
 }
 
