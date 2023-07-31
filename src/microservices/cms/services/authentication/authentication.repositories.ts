@@ -96,6 +96,7 @@ class AuthRepository {
           ll: geo.ll, // latitude and longitude
           timezone: geo.timezone,
         };
+        console.log(geo);
       }
       res.status(200).json({
         success: true,
@@ -104,7 +105,7 @@ class AuthRepository {
         session: {
           jwt: token,
           user_id: user.id,
-          address_details: ipDetails,
+          address_details: geo,
           device_details: {
             device: agent.device.toString(),
             os: agent.os.toString(),
