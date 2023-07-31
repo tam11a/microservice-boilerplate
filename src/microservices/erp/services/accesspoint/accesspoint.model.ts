@@ -8,29 +8,19 @@ import {
   CreatedAt,
   UpdatedAt,
   DeletedAt,
-  AllowNull,
-  Default,
 } from "sequelize-typescript";
 
 @Table({
-  tableName: "role",
+  tableName: "accesspoint",
 })
-class Role extends Model<Role> {
+class AccessPoint extends Model<AccessPoint> {
   @PrimaryKey
   @AutoIncrement
   @Column(DataType.BIGINT)
   "id": number;
 
   @Column
-  "name": string;
-
-  @AllowNull
-  @Column
-  "description": string;
-
-  @Default(true)
-  @Column
-  "is_active": boolean;
+  "point_name": string;
 
   @CreatedAt
   @Column({ field: "created_at" })
@@ -43,7 +33,6 @@ class Role extends Model<Role> {
   @DeletedAt
   @Column({ field: "deleted_at" })
   "deleted_at": Date;
-
 }
 
-export default Role;
+export default AccessPoint;
