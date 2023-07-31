@@ -7,5 +7,4 @@ user_router.get("/", [repository.find]);
 user_router.get("/:id", [repository.findById]);
 user_router.patch("/:id", [repository.update]);
 
-
 module.exports = user_router;
