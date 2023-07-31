@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import Employee from "./employee.model";
 import { Op } from "sequelize";
 import Pagination from "@/utils/Pagination";
+const ErrorResponse = require("@/middleware/Error/error.response");
 
 class EmployeeRepository {
   constructor() {}
@@ -83,15 +84,14 @@ class EmployeeRepository {
 
   public async findById(req: Request, res: Response, next: NextFunction) {
     try {
-      if (!req.params.id)
-        return next(new ErrorResponse("No employee found!", 404));
-
       var employee = await Employee.findByPk(req.params.id, {
-
         attributes: {
           exclude: ["password"],
         },
       });
+
+      if (!employee)
+        return next(new ErrorResponse("No employee found!", 404));
 
       res.status(201).json({
         success: true,
@@ -106,7 +106,8 @@ class EmployeeRepository {
   public async update(req: Request, res: Response, next: NextFunction) {
     try {
       if (!req.params.id)
-      return next(new ErrorResponse("Invalid Request!", 400));
+        return next(new ErrorResponse("Invalid Request!", 400));
+      
       const {
             first_name,
             last_name,
