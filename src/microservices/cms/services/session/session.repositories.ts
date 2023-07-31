@@ -10,34 +10,10 @@ class SessionRepository {
   public async find(req: Request, res: Response, next: NextFunction) {
     const pagination = new Pagination(req, res, next);
     const { offset, limit } = pagination.get_attributes();
-
+    console.log(req.query);
     pagination.arrange_and_send(
       await Session.findAndCountAll({
-        where: {
-          [Op.or]: [
-            {
-              ip_address: {
-                [Op.like]: `%${pagination.search_string}%`,
-              },
-            },
-            {
-              address_details: {
-                [Op.like]: `%${pagination.search_string}%`,
-              },
-            },
-            {
-              device_details: {
-                [Op.like]: `%${pagination.search_string}%`,
-              },
-            },
-            {
-              user_agent: {
-                [Op.like]: `%${pagination.search_string}%`,
-              },
-            },
-          ],
-        },
-
+        where: {},
         offset,
         limit,
       })
@@ -62,43 +38,6 @@ class SessionRepository {
       next(error);
     }
   }
-
-  /* public async update(req: Request, res: Response, next: NextFunction) {
-    try {
-      if (!req.params.id)
-        return next(new ErrorResponse("Invalid Request!", 400));
-      const {
-        first_name,
-        last_name,
-        username,
-        gender,
-        display_picture,
-        email,
-        default_address,
-      } = req.body;
-
-      var user = await User.findByPk(req.params.id, {});
-
-      if (!user) return next(new ErrorResponse("No user found!", 404));
-
-      await user.update({
-        first_name,
-        last_name,
-        username,
-        gender,
-        display_picture,
-        email,
-        default_address,
-      });
-
-      res.status(204).json({
-        success: true,
-        message: "Information updated successfully",
-      });
-    } catch (error) {
-      next(error);
-    }
-  } */
 }
 
 export default SessionRepository;

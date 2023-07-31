@@ -17,7 +17,7 @@ import User from "../users/users.model";
 @Table({
   tableName: "user_session",
 })
-class UserSession extends Model<UserSession> {
+class UserSession extends Model {
   @PrimaryKey
   @AutoIncrement
   @Column(DataType.BIGINT)
