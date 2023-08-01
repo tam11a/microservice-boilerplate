@@ -95,14 +95,37 @@ class UserRepository {
 				max_session,
 			});
 
-			res.status(204).json({
-				success: true,
-				message: "Information updated successfully",
-			});
-		} catch (error) {
-			next(error);
-		}
-	}
+
+      res.status(204).json({
+        success: true,
+        message: "Information updated successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  public async activeInactive(req: Request, res: Response, next: NextFunction) {
+    try {
+      var user = await User.findByPk(req.params.id, {});
+
+      if (!user) return next(new ErrorResponse("No user found!", 404));
+
+      await user.update({
+        is_active: !user.is_active,
+      });
+      await user.save();
+
+      res.status(204).json({
+        success: true,
+        message: `Employee ${
+          user.is_active ? "suspended" : "activated"
+        } successfully`,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default UserRepository;

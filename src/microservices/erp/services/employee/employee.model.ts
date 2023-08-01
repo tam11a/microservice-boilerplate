@@ -1,18 +1,18 @@
 import {
-	Table,
-	Column,
-	Model,
-	DataType,
-	PrimaryKey,
-	AutoIncrement,
-	CreatedAt,
-	UpdatedAt,
-	DeletedAt,
-	AllowNull,
-	BeforeUpdate,
-	BeforeCreate,
-	IsEmail,
-	Default,
+  Table,
+  Column,
+  Model,
+  DataType,
+  PrimaryKey,
+  AutoIncrement,
+  CreatedAt,
+  UpdatedAt,
+  DeletedAt,
+  AllowNull,
+  BeforeUpdate,
+  BeforeCreate,
+  IsEmail,
+  Default,
   ForeignKey,
   BelongsTo,
 } from "sequelize-typescript";
@@ -108,9 +108,11 @@ class Employee extends Model<Employee> {
   @BeforeUpdate
   @BeforeCreate
   static async hashPassword(instance: Employee) {
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(instance.password, salt);
-    instance.password = hashedPassword;
+    if (instance.changed("password")) {
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(instance.password, salt);
+      instance.password = hashedPassword;
+    }
   }
 }
 
