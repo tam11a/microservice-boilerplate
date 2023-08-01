@@ -1,8 +1,11 @@
 import { Request, Response, NextFunction } from "express";
-import User from "./users.model";
 import Pagination from "@/utils/Pagination";
 const ErrorResponse = require("@/middleware/Error/error.response");
 import { Op } from "sequelize";
+
+import Database from "@/database";
+import UserSession from "../session/session.model";
+const User = Database.get_model("User");
 
 class UserRepository {
 	constructor() {}
@@ -38,7 +41,20 @@ class UserRepository {
 					],
 				},
 				attributes: {
-					exclude: ["password"],
+					exclude: ["password", "default_address"],
+					include: [
+						[
+							Database.sequelize.literal(`(
+								SELECT COUNT(*)
+								FROM user_session AS session
+								WHERE
+									session.user_id = User.id
+									AND
+									session.logged_out_at IS NOT NULL
+							)`),
+							"active_sessions",
+						],
+					],
 				},
 				offset,
 				limit,
@@ -95,37 +111,36 @@ class UserRepository {
 				max_session,
 			});
 
+			res.status(204).json({
+				success: true,
+				message: "Information updated successfully",
+			});
+		} catch (error) {
+			next(error);
+		}
+	}
 
-      res.status(204).json({
-        success: true,
-        message: "Information updated successfully",
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
+	public async activeInactive(req: Request, res: Response, next: NextFunction) {
+		try {
+			var user = await User.findByPk(req.params.id, {});
 
-  public async activeInactive(req: Request, res: Response, next: NextFunction) {
-    try {
-      var user = await User.findByPk(req.params.id, {});
+			if (!user) return next(new ErrorResponse("No user found!", 404));
 
-      if (!user) return next(new ErrorResponse("No user found!", 404));
+			await user.update({
+				is_active: !user.getDataValue("is_active"),
+			});
+			await user.save();
 
-      await user.update({
-        is_active: !user.is_active,
-      });
-      await user.save();
-
-      res.status(204).json({
-        success: true,
-        message: `Employee ${
-          user.is_active ? "suspended" : "activated"
-        } successfully`,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
+			res.status(204).json({
+				success: true,
+				message: `Employee ${
+					user.getDataValue("is_active") ? "suspended" : "activated"
+				} successfully`,
+			});
+		} catch (error) {
+			next(error);
+		}
+	}
 }
 
 export default UserRepository;

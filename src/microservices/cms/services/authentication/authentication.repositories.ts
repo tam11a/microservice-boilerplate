@@ -1,12 +1,15 @@
 import { Request, Response, NextFunction } from "express";
-import User from "../users/users.model";
-import UserSession from "../session/session.model";
 import useragent from "useragent";
 import geoip from "geoip-lite";
 import { Op } from "sequelize";
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const ErrorResponse = require("@/middleware/Error/error.response");
+
+import Database from "@/database";
+
+const User = Database.get_model("User");
+const UserSession = Database.get_model("UserSession");
 
 class AuthRepository {
 	constructor() {
@@ -127,7 +130,7 @@ class AuthRepository {
 			const user = data[0];
 
 			// Checkout for suspension
-			if (!user.is_active)
+			if (!user.getDataValue("is_active"))
 				return next(
 					new ErrorResponse(
 						"Your user account is suspended. Please contact with helpline.",
@@ -136,7 +139,7 @@ class AuthRepository {
 				);
 
 			// Check out for incorrect password
-			if (!(await bcrypt.compare(password, user.password)))
+			if (!(await bcrypt.compare(password, user.getDataValue("password"))))
 				return next(new ErrorResponse("Incorrect Password", 401));
 
 			// Check out session for available slot
@@ -147,11 +150,13 @@ class AuthRepository {
 							[Op.eq]: null,
 						},
 					},
-				})) >= user.max_session
+				})) >= user.getDataValue("max_session")
 			)
 				return next(
 					new ErrorResponse(
-						`You have already signed into ${user.max_session} devices. Please logout from other device to continue.`,
+						`You have already signed into ${user.getDataValue(
+							"max_session"
+						)} devices. Please logout from other device to continue.`,
 						400
 					)
 				);
@@ -171,7 +176,9 @@ class AuthRepository {
 			res.status(200).json({
 				success: true,
 				token,
-				message: `Welcome ${user.first_name} ${user.last_name}!!`,
+				message: `Welcome ${user.getDataValue(
+					"first_name"
+				)} ${user.getDataValue("last_name")}!!`,
 			});
 		} catch (error) {
 			next(error);
