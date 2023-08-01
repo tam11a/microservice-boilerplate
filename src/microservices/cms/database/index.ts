@@ -3,7 +3,8 @@ const db_config = require("../config").database;
 const path = require("path");
 
 class Database {
-	public sequelize: any;
+	public sequelize: Sequelize;
+	public models: any;
 	constructor() {
 		this.sequelize = new Sequelize({
 			...db_config,
@@ -13,14 +14,18 @@ class Database {
 				acquire: 30000,
 				idle: 10000,
 			},
+			logging: false,
 			models: [path.join(__dirname, "..", "services", "**/*.model.js")],
 			modelMatch: (filename, member) => {
+				console.log(filename);
 				return (
 					filename.substring(0, filename.indexOf(".model")) ===
 					member.toLowerCase()
 				);
 			},
 		});
+
+		this.models = this.sequelize.models;
 	}
 
 	public async init() {
@@ -33,6 +38,11 @@ class Database {
 				console.log("Failed to sync database: " + err.message);
 			});
 	}
+
+	public get_model(modelName: string) {
+		return this.sequelize.model(modelName);
+	}
 }
 
-export default Database;
+const DB = new Database();
+export default DB;

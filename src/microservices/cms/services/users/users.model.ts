@@ -91,14 +91,14 @@ class User extends Model<User> {
 	"deleted_at": Date;
 
 	@BeforeUpdate
-  @BeforeCreate
-  static async hashPassword(instance: User) {
-    if (instance.changed("password")) {
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(instance.password, salt);
-      instance.password = hashedPassword;
-    }
-  }
+	@BeforeCreate
+	static async hashPassword(instance: User) {
+		if (instance.changed("password")) {
+			const salt = await bcrypt.genSalt(10);
+			const hashedPassword = await bcrypt.hash(instance.password, salt);
+			instance.password = hashedPassword;
+		}
+	}
 }
 
 export default User;

@@ -2,8 +2,7 @@ import App from "./app.module";
 import Database from "./database";
 const port = require("./config").port;
 
-const db = new Database();
-db.init();
+Database.init();
 
 new App(
 	port,
