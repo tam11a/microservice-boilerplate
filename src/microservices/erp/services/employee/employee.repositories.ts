@@ -83,16 +83,15 @@ class EmployeeRepository {
   }
 
   public async findById(req: Request, res: Response, next: NextFunction) {
-    try {      
+    try {
       var employee = await Employee.findByPk(req.params.id, {
         attributes: {
           exclude: ["password"],
         },
       });
-      
-      if (!employee)
-        return next(new ErrorResponse("No employee found!", 404)); 
-      
+
+      if (!employee) return next(new ErrorResponse("No employee found!", 404));
+
       res.status(200).json({
         success: true,
         message: "Information fetched successfully",
@@ -107,27 +106,27 @@ class EmployeeRepository {
     try {
       if (!req.params.id)
         return next(new ErrorResponse("Invalid Request!", 400));
-      
+
       const {
-            first_name,
-            last_name,
-            username,
-            gender,
-            display_picture,
-            email,
-            dob,
-            hired_date,
-            role_id,
-            work_hour,
-            salary,
-            bank,
-            default_address
+        first_name,
+        last_name,
+        username,
+        gender,
+        display_picture,
+        email,
+        dob,
+        hired_date,
+        role_id,
+        work_hour,
+        salary,
+        bank,
+        default_address,
       } = req.body;
-     
+
       var employee = await Employee.findByPk(req.params.id, {});
-      
+
       if (!employee) return next(new ErrorResponse("No employee found!", 404));
-      
+
       await employee.update({
         first_name,
         last_name,
@@ -147,6 +146,28 @@ class EmployeeRepository {
       res.status(204).json({
         success: true,
         message: "Information updated successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  public async activeInactive(req: Request, res: Response, next: NextFunction) {
+    try {
+      var employee = await Employee.findByPk(req.params.id, {});
+
+      if (!employee) return next(new ErrorResponse("No employee found!", 404));
+
+      await employee.update({
+        is_active: !employee.is_active,
+      });
+      await employee.save();
+
+      res.status(204).json({
+        success: true,
+        message: `Employee ${
+          employee.is_active ? "suspended" : "activated"
+        } successfully`,
       });
     } catch (error) {
       next(error);
