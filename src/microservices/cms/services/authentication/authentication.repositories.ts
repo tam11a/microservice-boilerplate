@@ -3,10 +3,10 @@ import User from "../users/users.model";
 import UserSession from "../session/session.model";
 import useragent from "useragent";
 import geoip from "geoip-lite";
+import { Op } from "sequelize";
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const ErrorResponse = require("@/middleware/Error/error.response");
-const { Op } = require("sequelize");
 
 class AuthRepository {
 	constructor() {
@@ -115,6 +115,7 @@ class AuthRepository {
 					new ErrorResponse("Please provide phone number and password", 400)
 				);
 
+			// Finding User
 			const data = await User.findAll({
 				where: {
 					phone,
@@ -122,8 +123,10 @@ class AuthRepository {
 			});
 			if (!data.length) return next(new ErrorResponse("No user found", 404));
 
+			// Extract User Data
 			const user = data[0];
 
+			// Checkout for suspension
 			if (!user.is_active)
 				return next(
 					new ErrorResponse(
@@ -132,18 +135,36 @@ class AuthRepository {
 					)
 				);
 
+			// Check out for incorrect password
+			if (!(await bcrypt.compare(password, user.password)))
+				return next(new ErrorResponse("Incorrect Password", 401));
+
+			// Check out session for available slot
+			if (
+				(await user.$count("sessions", {
+					where: {
+						logged_out_at: {
+							[Op.eq]: null,
+						},
+					},
+				})) >= user.max_session
+			)
+				return next(
+					new ErrorResponse(
+						`You have already signed into ${user.max_session} devices. Please logout from other device to continue.`,
+						400
+					)
+				);
+
+			// Checkout for verification
 			/* if (!user.verified_at)
           return next(
             new ErrorResponse("Your user account is not verified yet.", 400)
           ); */
 
-			if (!(await bcrypt.compare(password, user.password)))
-				return next(new ErrorResponse("Incorrect Password", 401));
-
-			console.log(typeof this);
-
 			// Create Token
 			const token: string = this.create_jwt(user.id);
+
 			// Create Session
 			await this.create_session(user.id, token, req, res, next);
 
@@ -188,6 +209,24 @@ class AuthRepository {
 			});
 
 			if (!user) return next(new ErrorResponse("No user found!", 404));
+
+			// Check for session expire
+			if (
+				!!(await user.$count("sessions", {
+					where: {
+						jwt: token,
+						logged_out_at: {
+							[Op.ne]: null,
+						},
+					},
+				}))
+			)
+				return next(
+					new ErrorResponse(
+						`This session is signed out. Please sign in again.`,
+						401
+					)
+				);
 
 			res.status(200).json({
 				success: true,
