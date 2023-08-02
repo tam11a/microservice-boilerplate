@@ -40,16 +40,12 @@ class SessionRepository {
 
   public async findById(req: Request, res: Response, next: NextFunction) {
     try {
-      var session = await Session.findByPk(req.params.id, {
-        attributes: {
-          exclude: ["password"],
-        },
-      });
+      var session = await Session.findByPk(req.params.id, {});
       if (!session) return next(new ErrorResponse("No session found!", 404));
 
       res.status(200).json({
         success: true,
-        //message: "Information fetched successfully",
+        message: "Information fetched successfully",
         data: session,
       });
     } catch (error) {

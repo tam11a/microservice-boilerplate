@@ -1,12 +1,84 @@
 import { Request, Response, NextFunction } from "express";
+import useragent from "useragent";
+import geoip from "geoip-lite";
 import Employee from "../employee/employee.model";
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const ErrorResponse = require("@/middleware/Error/error.response");
 const { Op } = require("sequelize");
+import EmployeeSession from "../session/session.model";
 
 class AuthenticationRepository {
-  constructor() {}
+  constructor() {
+    this.login = this.login.bind(this);
+    this.validate = this.validate.bind(this);
+    this.signout = this.signout.bind(this);
+  }
+
+  public create_jwt(id: number) {
+    return jwt.sign({ id: id, admin: false }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_EXPIRE,
+    });
+  }
+
+  public async create_session(
+    employee_id: number,
+    jwt: string,
+    req: Request,
+    _res: Response,
+    next: NextFunction
+  ) {
+    try {
+      // Collect User-Agent
+      const agent = useragent.parse(req.headers["user-agent"]);
+      // Extract from IP Address in Header to GEO Object - Doesn't work on local server
+      const geo = geoip.lookup(
+        (
+          req.headers["x-forwarded-for"] || // Collect IP Address
+          req.socket.remoteAddress ||
+          ""
+        ).toString()
+      );
+
+      const session = {
+        jwt,
+        employee_id,
+        address_details:
+          Array.from(new Set([geo?.city, geo?.country]))?.join(", ") || null,
+        device_details: JSON.stringify({
+          device: agent.device.toString(),
+          os: agent.os.toString(),
+          browser: agent.toAgent(),
+        }),
+        user_agent: req.headers["user-agent"],
+        ip_address: req.headers["x-forwarded-for"] || req.socket.remoteAddress,
+        latitude: geo?.ll?.[0] || null,
+        longitude: geo?.ll?.[1] || null,
+        last_login: new Date(),
+      };
+
+      await EmployeeSession.create(
+        {
+          ...session,
+        },
+        {
+          fields: [
+            "jwt",
+            "employee_id",
+            "address_details",
+            "device_details",
+            "user_agent",
+            "ip_address",
+            "latitude",
+            "longitude",
+            "last_login",
+          ],
+        }
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
 
   public async login(req: Request, res: Response, next: NextFunction) {
     try {
@@ -34,33 +106,58 @@ class AuthenticationRepository {
           )
         );
 
+      if (!(await bcrypt.compare(password, employee.password)))
+        return next(new ErrorResponse("Incorrect Password", 401));
+
+      // Check out session for available slot
+      if (
+        (await employee.$count("sessions", {
+          where: {
+            logged_out_at: {
+              [Op.eq]: null,
+            },
+          },
+        })) >= employee.getDataValue("max_session")
+      )
+        return next(
+          new ErrorResponse(
+            `You have already signed into ${employee.getDataValue(
+              "max_session"
+            )} devices. Please logout from other device to continue.`,
+            400
+          )
+        );
+
       //if (!employee.verified_at)
       //	return next(
       //		new ErrorResponse("Your employee account is not verified yet.", 400)
       //	);
 
-      if (!(await bcrypt.compare(password, employee.password)))
-        return next(new ErrorResponse("Incorrect Password", 401));
+      // Create Token
+      const token: string = this.create_jwt(employee.id);
+
+      // Create Session
+      await this.create_session(employee.id, token, req, res, next);
 
       res.status(200).json({
         success: true,
-        token: jwt.sign(
-          { id: employee.id, admin: false },
-          process.env.JWT_SECRET,
-          {
-            expiresIn: process.env.JWT_EXPIRE,
-          }
-        ),
-        message: `Welcome ${employee.first_name} ${employee.last_name}!!`,
+        token,
+        message: `Welcome ${employee.getDataValue(
+          "first_name"
+        )} ${employee.getDataValue("last_name")}!!`,
       });
     } catch (error) {
       next(error);
     }
   }
 
-  public async validate(req: Request, res: Response, next: NextFunction) {
-    let token;
-
+  //jwt extraction to logout
+  public extract_jwt(
+    req: Request,
+    _res: Response,
+    _next: NextFunction
+  ): { token: string; decoded: any } {
+    var token;
     if (
       req.headers.authorization &&
       req.headers.authorization.startsWith("Bearer")
@@ -68,10 +165,15 @@ class AuthenticationRepository {
       token = req.headers.authorization.split(" ")[1];
     }
 
-    if (!token) return next(new ErrorResponse("Unauthorized employee!", 401));
+    if (!token) throw new ErrorResponse("Unauthorized employee!", 401);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    return { token, decoded };
+  }
 
+  public async validate(req: Request, res: Response, next: NextFunction) {
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const { token, decoded } = this.extract_jwt(req, res, next);
+
       if (!decoded.id)
         return next(new ErrorResponse("Unauthorized employee!", 401));
 
@@ -79,50 +181,67 @@ class AuthenticationRepository {
         where: {
           id: decoded.id,
           is_active: true,
-          // verified_at: {
-          //   [Op.ne]: null,
-          // },
+          /* verified_at: {
+						[Op.ne]: null,
+					}, */
         },
         attributes: {
           exclude: ["password"],
         },
       });
 
-      // If there's no employee
       if (!employee) return next(new ErrorResponse("No employee found!", 404));
 
-      // get employee role
-      const employee_role = await employee.$get("role");
-
-      // get employee permissions with access point
-      const employee_permissions = await employee_role?.$get(
-        "assigned_permissions",
-        {
-          include: ["access_point"],
-        }
-      );
-
-      // re-arrange employee data
-      const data = {
-        ...employee.dataValues,
-        role: {
-          id: employee_role?.id,
-          name: employee_role?.name,
-          description: employee_role?.description,
-          is_active: employee_role?.is_active,
-        },
-        permissions: employee_permissions?.flatMap?.((y: any) => ({
-          id: y.id,
-          access_point_id: y.access_point_id,
-          access_point_name: y.access_point.point_name,
-          type: y.type,
-        })),
-      };
+      // Check for session expire  //kori nai
+      if (
+        !!(await employee.$count("sessions", {
+          where: {
+            jwt: token,
+            logged_out_at: {
+              [Op.ne]: null,
+            },
+          },
+        }))
+      )
+        return next(
+          new ErrorResponse(
+            `This session is signed out. Please sign in again.`,
+            401
+          )
+        );
 
       res.status(200).json({
         success: true,
-        message: "Employee is authenticated",
-        data,
+        message: "Employee is authenticated.",
+        data: employee.dataValues,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  //signout
+  public async signout(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { token } = this.extract_jwt(req, res, next);
+
+      const session = await EmployeeSession.findOne({
+        where: {
+          jwt: token,
+        },
+      });
+
+      if (session?.getDataValue("logged_out_at") !== null)
+        return next(
+          new ErrorResponse(`This session is already signed out.`, 401)
+        );
+
+      session.logged_out_at = new Date();
+      session.save();
+
+      res.status(200).json({
+        success: true,
+        message: "User logged out successfully.",
       });
     } catch (error) {
       next(error);
@@ -130,21 +249,4 @@ class AuthenticationRepository {
   }
 }
 
-/*
-"id": 7,
-        "first_name": "Ibrahim Sadik",
-        "last_name": "Tamim",
-        "username": "tam11a",
-        "password": "$2a$10$vcP.DbbKKV/Ca2qNd.Jcg.QPVvj.aKQamZm1lN3O06PiqIozeF5Bq",
-        "gender": "Male",
-        "display_picture": null,
-        "email": "ibrahimsadiktamim@gmail.com",
-        "phone": "01768161994",
-        "default_address": null,
-        "is_active": true,
-        "is_verified": false,
-        "created_at": "2023-07-25T18:04:55.000Z",
-        "updated_at": "2023-07-25T18:04:55.000Z",
-        "deleted_at": null
-*/
 export default AuthenticationRepository;

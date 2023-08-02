@@ -5,5 +5,6 @@ const repository = new AuthenticationRepository();
 
 authentication_router.post("/login", [repository.login]);
 authentication_router.get("/validate", [repository.validate]);
+authentication_router.put("/logout", [repository.signout]);
 
 module.exports = authentication_router;
