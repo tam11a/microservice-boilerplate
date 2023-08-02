@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import Employee from "./employee.model";
 import { Op } from "sequelize";
 import Pagination from "@/utils/Pagination";
+import Role from "../role/role.model";
 const ErrorResponse = require("@/middleware/Error/error.response");
 
 class EmployeeRepository {
@@ -44,40 +45,41 @@ class EmployeeRepository {
   }
 
   public async find(req: Request, res: Response, next: NextFunction) {
-    const pagination = new Pagination(req, res, next);
-    const { offset, limit } = pagination.get_attributes();
+    // Query Props
+    const { role_id } = req.query;
 
-    pagination.arrange_and_send(
+    // Pagination, Filter, Search
+    const { get_attributes, get_search_ops, format_filters, arrange_and_send } =
+      new Pagination(req, res, next);
+
+    // Get Props for Query
+    const { offset, limit, paranoid } = get_attributes();
+    // Get Search Object
+    const search_ops = get_search_ops([
+      "first_name",
+      "last_name",
+      "username",
+      "phone",
+    ]);
+    // Get Filter Props
+    const filters = format_filters({
+      role_id,
+    });
+
+    arrange_and_send(
       await Employee.findAndCountAll({
         where: {
-          [Op.or]: [
-            {
-              first_name: {
-                [Op.like]: `%${pagination.search_string}%`,
-              },
-            },
-            {
-              last_name: {
-                [Op.like]: `%${pagination.search_string}%`,
-              },
-            },
-            {
-              username: {
-                [Op.like]: `%${pagination.search_string}%`,
-              },
-            },
-            {
-              phone: {
-                [Op.like]: `%${pagination.search_string}%`,
-              },
-            },
-          ],
+          [Op.or]: search_ops,
+          ...filters,
         },
-        attributes: {
-          exclude: ["password"],
+        include: {
+          model: Role,
+          as: "role",
+          attributes: ["id", "name"],
         },
         offset,
         limit,
+        paranoid, // if False, shows soft-deleted data too
       })
     );
   }
