@@ -5,5 +5,6 @@ const repository = new SessionRepository();
 
 session_router.get("/", [repository.find]);
 session_router.get("/:id", [repository.findById]);
+session_router.put("/:id", [repository.logout]);
 
 module.exports = session_router;
