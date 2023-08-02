@@ -19,6 +19,10 @@ import {
 import UserSession from "../session/session.model";
 const bcrypt = require("bcryptjs");
 
+const {
+	generateSecret,
+} = require("@/services/authentication/authentication.util");
+
 @Table({
 	tableName: "user",
 })
@@ -70,6 +74,10 @@ class User extends Model<User> {
 	@Default(true)
 	@Column
 	"is_active": boolean;
+
+	@Default(generateSecret())
+	@Column
+	"verification_key": string;
 
 	@AllowNull
 	@Column

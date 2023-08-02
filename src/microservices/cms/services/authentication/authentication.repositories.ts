@@ -6,6 +6,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const ErrorResponse = require("@/middleware/Error/error.response");
 
+const { generateOTP } = require("./authentication.util");
+
 import User from "../users/users.model";
 import UserSession from "../session/session.model";
 
@@ -18,7 +20,7 @@ class AuthRepository {
 
 	public async register(req: Request, res: Response, next: NextFunction) {
 		try {
-			await User.create(
+			const user = await User.create(
 				{
 					...req.body,
 				},
@@ -36,9 +38,12 @@ class AuthRepository {
 				}
 			);
 
+			const otp = generateOTP(user.verification_key);
+
 			res.status(201).json({
 				success: true,
 				message: "User created successfully",
+				otp,
 			});
 		} catch (error) {
 			next(error);
