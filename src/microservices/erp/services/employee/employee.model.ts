@@ -1,19 +1,22 @@
 import {
-	Table,
-	Column,
-	Model,
-	DataType,
-	PrimaryKey,
-	AutoIncrement,
-	CreatedAt,
-	UpdatedAt,
-	DeletedAt,
-	AllowNull,
-	BeforeUpdate,
-	BeforeCreate,
-	IsEmail,
-	Default,
+  Table,
+  Column,
+  Model,
+  DataType,
+  PrimaryKey,
+  AutoIncrement,
+  CreatedAt,
+  UpdatedAt,
+  DeletedAt,
+  AllowNull,
+  BeforeUpdate,
+  BeforeCreate,
+  IsEmail,
+  Default,
+  ForeignKey,
+  BelongsTo,
 } from "sequelize-typescript";
+import Role from "../role/role.model";
 const bcrypt = require("bcryptjs");
 
 @Table({
@@ -60,9 +63,6 @@ class Employee extends Model<Employee> {
   "hired_date": string;
 
   @Column
-  "role": string;
-
-  @Column
   "work_hour": string;
 
   @Column
@@ -95,12 +95,24 @@ class Employee extends Model<Employee> {
   @Column({ field: "deleted_at" })
   "deleted_at": Date;
 
+  // Relations
+  @ForeignKey(() => Role)
+  @AllowNull
+  @Column(DataType.BIGINT)
+  "role_id": number;
+
+  @BelongsTo(() => Role)
+  "role": Role;
+
+  //hooks
   @BeforeUpdate
   @BeforeCreate
   static async hashPassword(instance: Employee) {
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(instance.password, salt);
-    instance.password = hashedPassword;
+    if (instance.changed("password")) {
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(instance.password, salt);
+      instance.password = hashedPassword;
+    }
   }
 }
 
