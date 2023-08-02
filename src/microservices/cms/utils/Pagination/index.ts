@@ -34,9 +34,12 @@ class Pagination {
 					: 1;
 			this.skip = (this.page - 1) * this.limit;
 			this.literal_fields = literal_fields;
+
 			this.show_paranoid =
 				show_paranoid !== null && show_paranoid !== undefined
-					? !!show_paranoid
+					? show_paranoid === "true"
+						? true
+						: false
 					: true;
 		} catch (err) {
 			this._next(err);
