@@ -38,6 +38,26 @@ class SessionRepository {
       next(error);
     }
   }
+
+  public async logout(req: Request, res: Response, next: NextFunction) {
+    try {
+      var session = await Session.findByPk(req.params.id, {});
+      if (!session) return next(new ErrorResponse("No session found!", 404));
+      if (session.logged_out_at !== null)
+        return next(
+          new ErrorResponse("This session is already signed out!", 401)
+        );
+      session.logged_out_at = new Date();
+      session.save();
+
+      res.status(200).json({
+        success: true,
+        message: "Session logged out successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default SessionRepository;
