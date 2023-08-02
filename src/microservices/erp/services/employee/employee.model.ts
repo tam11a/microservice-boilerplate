@@ -15,8 +15,10 @@ import {
   Default,
   ForeignKey,
   BelongsTo,
+  HasMany,
 } from "sequelize-typescript";
 import Role from "../role/role.model";
+import EmployeeSession from "../session/session.model";
 const bcrypt = require("bcryptjs");
 
 @Table({
@@ -75,6 +77,10 @@ class Employee extends Model<Employee> {
   @Column
   "default_address": string;
 
+  @Default(4)
+  @Column
+  "max_session": number;
+
   @Default(true)
   @Column
   "is_active": boolean;
@@ -103,6 +109,9 @@ class Employee extends Model<Employee> {
 
   @BelongsTo(() => Role)
   "role": Role;
+
+  @HasMany(() => EmployeeSession)
+  "sessions": EmployeeSession[];
 
   //hooks
   @BeforeUpdate

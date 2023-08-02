@@ -10,7 +10,7 @@ class SessionRepository {
 
   public async find(req: Request, res: Response, next: NextFunction) {
     // Query Props
-    const { user_id } = req.query;
+    const { employee_id } = req.query;
 
     // Pagination, Filter, Search
     const { get_attributes, get_search_ops, format_filters, arrange_and_send } =
@@ -22,7 +22,7 @@ class SessionRepository {
     const search_ops = get_search_ops(["user_agent"]);
     // Get Filter Props
     const filters = format_filters({
-      user_id,
+      employee_id,
     });
 
     arrange_and_send(

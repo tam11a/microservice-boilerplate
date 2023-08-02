@@ -225,6 +225,7 @@ class AuthRepository {
 
       if (!user) return next(new ErrorResponse("No user found!", 404));
 
+
       // Check for session expire
       if (
         !!(await user.$count("sessions", {
