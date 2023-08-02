@@ -145,33 +145,6 @@ class UserRepository {
       next(error);
     }
   }
-
-  public async resetPassword(req: Request, res: Response, next: NextFunction) {
-    try {
-      const { password, new_password } = req.body;
-      // Find the user by id
-      const user = await User.findByPk(req.params.id);
-
-      // If the user does not exist, return an error.
-      if (!user) {
-        return res.status(404).json({ error: "User not found." });
-      }
-
-      // Check if the old password matches the stored password
-      if (!(await bcrypt.compare(password, user.password)))
-        return next(new ErrorResponse("Incorrect Password", 401));
-
-      // Update the user's password with the new password
-      await user.update({ password: new_password });
-
-      res.status(200).json({
-        success: true,
-        message: "Password reset successful.",
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
 }
 
 export default UserRepository;
