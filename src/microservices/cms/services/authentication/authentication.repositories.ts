@@ -6,14 +6,14 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const ErrorResponse = require("@/middleware/Error/error.response");
 
-import Database from "@/database";
-
-const User = Database.get_model("User");
-const UserSession = Database.get_model("UserSession");
+import User from "../users/users.model";
+import UserSession from "../session/session.model";
 
 class AuthRepository {
 	constructor() {
 		this.login = this.login.bind(this);
+		this.validate = this.validate.bind(this);
+		this.signout = this.signout.bind(this);
 	}
 
 	public async register(req: Request, res: Response, next: NextFunction) {
@@ -185,9 +185,12 @@ class AuthRepository {
 		}
 	}
 
-	public async validate(req: Request, res: Response, next: NextFunction) {
-		let token;
-
+	public extract_jwt(
+		req: Request,
+		_res: Response,
+		_next: NextFunction
+	): { token: string; decoded: any } {
+		var token;
 		if (
 			req.headers.authorization &&
 			req.headers.authorization.startsWith("Bearer")
@@ -195,10 +198,15 @@ class AuthRepository {
 			token = req.headers.authorization.split(" ")[1];
 		}
 
-		if (!token) return next(new ErrorResponse("Unauthorized user!", 401));
+		if (!token) throw new ErrorResponse("Unauthorized user!", 401);
+		const decoded = jwt.verify(token, process.env.JWT_SECRET);
+		return { token, decoded };
+	}
 
+	public async validate(req: Request, res: Response, next: NextFunction) {
 		try {
-			const decoded = jwt.verify(token, process.env.JWT_SECRET);
+			const { token, decoded } = this.extract_jwt(req, res, next);
+
 			if (!decoded.id)
 				return next(new ErrorResponse("Unauthorized user!", 401));
 
@@ -239,6 +247,33 @@ class AuthRepository {
 				success: true,
 				message: "User is authenticated.",
 				data: user.dataValues,
+			});
+		} catch (error) {
+			next(error);
+		}
+	}
+
+	public async signout(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { token } = this.extract_jwt(req, res, next);
+
+			const session = await UserSession.findOne({
+				where: {
+					jwt: token,
+				},
+			});
+
+			if (session?.getDataValue("logged_out_at") !== null)
+				return next(
+					new ErrorResponse(`This session is already signed out.`, 401)
+				);
+
+			session.logged_out_at = new Date();
+			session.save();
+
+			res.status(200).json({
+				success: true,
+				message: "User logged out successfully.",
 			});
 		} catch (error) {
 			next(error);
