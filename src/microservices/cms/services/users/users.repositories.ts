@@ -4,41 +4,30 @@ const ErrorResponse = require("@/middleware/Error/error.response");
 import { Op } from "sequelize";
 
 import Database from "@/database";
-import UserSession from "../session/session.model";
 const User = Database.get_model("User");
 
 class UserRepository {
 	constructor() {}
 
 	public async find(req: Request, res: Response, next: NextFunction) {
-		const pagination = new Pagination(req, res, next);
-		const { offset, limit } = pagination.get_attributes();
+		const { get_attributes, get_search_ops, arrange_and_send } = new Pagination(
+			req,
+			res,
+			next
+		);
 
-		pagination.arrange_and_send(
+		const { offset, limit } = get_attributes();
+		const search_ops = get_search_ops([
+			"first_name",
+			"last_name",
+			"username",
+			"phone",
+		]);
+
+		arrange_and_send(
 			await User.findAndCountAll({
 				where: {
-					[Op.or]: [
-						{
-							first_name: {
-								[Op.like]: `%${pagination.search_string}%`,
-							},
-						},
-						{
-							last_name: {
-								[Op.like]: `%${pagination.search_string}%`,
-							},
-						},
-						{
-							username: {
-								[Op.like]: `%${pagination.search_string}%`,
-							},
-						},
-						{
-							phone: {
-								[Op.like]: `%${pagination.search_string}%`,
-							},
-						},
-					],
+					[Op.or]: search_ops,
 				},
 				attributes: {
 					exclude: ["password", "default_address"],
