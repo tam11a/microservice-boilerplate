@@ -2,9 +2,9 @@ import { Request, Response, NextFunction } from "express";
 import Pagination from "@/utils/Pagination";
 const ErrorResponse = require("@/middleware/Error/error.response");
 import { Op } from "sequelize";
-
-import Database from "@/database";
-const User = Database.get_model("User");
+import User from "./users.model";
+import { Sequelize } from "sequelize-typescript";
+const bcrypt = require("bcryptjs");
 
 class UserRepository {
   constructor() {}
@@ -47,7 +47,7 @@ class UserRepository {
           exclude: ["password", "default_address"],
           include: [
             [
-              Database.sequelize.literal(`(
+              Sequelize.literal(`(
 								SELECT COUNT(*)
 								FROM user_session AS session
 								WHERE
@@ -135,11 +135,38 @@ class UserRepository {
       });
       await user.save();
 
-      res.status(204).json({
+      res.status(200).json({
         success: true,
         message: `Employee ${
           user.getDataValue("is_active") ? "suspended" : "activated"
         } successfully`,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  public async resetPassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { password, new_password } = req.body;
+      // Find the user by id
+      const user = await User.findByPk(req.params.id);
+
+      // If the user does not exist, return an error.
+      if (!user) {
+        return res.status(404).json({ error: "User not found." });
+      }
+
+      // Check if the old password matches the stored password
+      if (!(await bcrypt.compare(password, user.password)))
+        return next(new ErrorResponse("Incorrect Password", 401));
+
+      // Update the user's password with the new password
+      await user.update({ password: new_password });
+
+      res.status(200).json({
+        success: true,
+        message: "Password reset successful.",
       });
     } catch (error) {
       next(error);
