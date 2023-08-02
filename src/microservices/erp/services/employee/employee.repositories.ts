@@ -165,7 +165,7 @@ class EmployeeRepository {
       });
       await employee.save();
 
-      res.status(204).json({
+      res.status(200).json({
         success: true,
         message: `Employee ${
           employee.is_active ? "suspended" : "activated"

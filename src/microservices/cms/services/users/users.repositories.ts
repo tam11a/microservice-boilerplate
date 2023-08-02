@@ -2,9 +2,9 @@ import { Request, Response, NextFunction } from "express";
 import Pagination from "@/utils/Pagination";
 const ErrorResponse = require("@/middleware/Error/error.response");
 import { Op } from "sequelize";
-
-import Database from "@/database";
-const User = Database.get_model("User");
+import User from "./users.model";
+import { Sequelize } from "sequelize-typescript";
+const bcrypt = require("bcryptjs");
 
 class UserRepository {
   constructor() {}
@@ -47,7 +47,7 @@ class UserRepository {
           exclude: ["password", "default_address"],
           include: [
             [
-              Database.sequelize.literal(`(
+              Sequelize.literal(`(
 								SELECT COUNT(*)
 								FROM user_session AS session
 								WHERE
@@ -135,7 +135,7 @@ class UserRepository {
       });
       await user.save();
 
-      res.status(204).json({
+      res.status(200).json({
         success: true,
         message: `Employee ${
           user.getDataValue("is_active") ? "suspended" : "activated"
