@@ -54,6 +54,16 @@ class Pagination {
 		this.arrange_and_send = this.arrange_and_send.bind(this);
 	}
 
+	public toBoolean(value: any) {
+		return value !== null && value !== undefined
+			? ["true", "True", true, 1].includes(value)
+				? true
+				: ["false", "False", false, 0].includes(value)
+				? false
+				: undefined
+			: undefined;
+	}
+
 	private replaceAll(str: string, find: string, replace: string) {
 		return str.replace(new RegExp(find, "g"), replace);
 	}
