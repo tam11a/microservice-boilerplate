@@ -128,6 +128,33 @@ class AuthenticationRepository {
       next(error);
     }
   }
+
+  public async resetPassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { password, new_password } = req.body;
+      // Find the employee by id
+      const employee = await Employee.findByPk(req.params.id);
+
+      // If the employee does not exist, return an error.
+      if (!employee) {
+        return res.status(404).json({ error: "Employee not found." });
+      }
+
+      // Check if the old password matches the stored password
+      if (!(await bcrypt.compare(password, employee.password)))
+        return next(new ErrorResponse("Incorrect Password", 401));
+
+      // Update the employee's password with the new password
+      await employee.update({ password: new_password });
+
+      res.status(200).json({
+        success: true,
+        message: "Password reset successful.",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 /*
